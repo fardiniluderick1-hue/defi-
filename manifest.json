@@ -1,12 +1,15 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "fullscreen",
-  "name": "enorfrof",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "krzofoz",
+  "name": "Défi de l'enchère",
+  "short_name": "Défi enchère",
   "start_url": "/defi-/",
-  "theme_color": "#ffffff",
-  "lang": "fr"
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
