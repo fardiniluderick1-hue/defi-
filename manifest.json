@@ -1,0 +1,11 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "defi de encer",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "encer",
+  "start_url": "/",
+  "theme_color": "#ffffff"
+}
