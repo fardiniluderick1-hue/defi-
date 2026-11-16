@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Défi de l'enchère bêta 1.3</title>
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --panel-bg: #111111;
+            --gold: #d4af37;
+            --text-main: #ffffff;
+            --text-muted: #777777;
+            --border: #222222;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            position: relative;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .menu-title-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            color: var(--gold);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .version {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--text-main);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background: var(--gold);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #181818;
+            color: #444444;
+            cursor: not-allowed;
+            border: 1px solid var(--border);
+        }
+
+        .btn-back-discret {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 10px;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .btn-back-discret:hover {
+            background: #1a1a1a;
+            color: #ff5555;
+            border-color: #ff5555;
+        }
+
+        /* --- CARROUSEL --- */
+        .carousel-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .carousel-container {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            width: 100%;
+            padding: 10px 0;
+            scrollbar-width: none;
+        }
+
+        .carousel-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .theme-card, .mode-card {
+            flex: 0 0 100%;
+            scroll-snap-align: center;
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 25px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 180px;
+        }
+
+        .theme-card:hover, .mode-card:hover {
+            border-color: var(--gold);
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .card-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .card-actions {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mode-card.disabled-mode {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .container.card-expanded .carousel-arrow,
+        .container.card-expanded .carousel-dots,
+        .container.card-expanded .menu-title-container,
+        .container.card-expanded .btn-back-discret {
+            display: none;
+        }
+
+        .container.card-expanded .carousel-wrapper {
+            margin-bottom: 0;
+        }
+
+        .container.card-expanded .carousel-container {
+            overflow: visible;
+        }
+
+        .container.card-expanded .theme-card:not(.expanded),
+        .container.card-expanded .mode-card:not(.expanded) {
+            display: none;
+        }
+
+        .container.card-expanded .theme-card.expanded,
+        .container.card-expanded .mode-card.expanded {
+            background: #151515;
+            border-color: var(--gold);
+            transform: scale(1.02);
+            min-height: 240px;
+        }
+
+        .container.card-expanded .theme-card.expanded .card-actions,
+        .container.card-expanded .mode-card.expanded .card-actions {
+            display: flex;
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--gold);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .carousel-arrow:hover {
+            background: var(--gold);
+            color: var(--bg-dark);
+        }
+
+        .arrow-left { left: -10px; }
+        .arrow-right { right: -10px; }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #333;
+        }
+
+        .dot.active {
+            background: var(--gold);
+        }
+
+        .btn-unexpand {
+            margin-top: 15px;
+            background: #222;
+            color: #ff5555;
+            display: none;
+        }
+
+        .container.card-expanded .btn-unexpand {
+            display: block;
+        }
+
+        /* --- CONFIG --- */
+        .config-group {
+            margin-bottom: 15px;
+        }
+
+        .config-label {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .config-label span {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--gold);
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .pseudo-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 140px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .pseudo-inputs input {
+            width: 100%;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+        }
+
+        .pseudo-inputs input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        /* --- POP-UP RÈGLEMENT --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 15px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 420px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.2);
+        }
+
+        .modal-title {
+            color: var(--gold);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            font-size: 0.8rem;
+            color: #ddd;
+            line-height: 1.5;
+            overflow-y: auto;
+            padding-right: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-grow: 1;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-body::-webkit-scrollbar-track {
+            background: #111;
+            border-radius: 4px;
+        }
+        .modal-body::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 4px;
+        }
+
+        .rule-box {
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        .rule-box.keys { background: rgba(50, 150, 250, 0.1); border-color: #3296fa; }
+        .rule-box.anti-buzz { background: rgba(250, 180, 50, 0.1); border-color: #fab432; }
+        .rule-box.streak { background: rgba(50, 200, 100, 0.1); border-color: #32c864; }
+        .rule-box.bonus { background: rgba(200, 50, 200, 0.1); border-color: #c832c8; }
+
+        .modal-footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--gold);
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        /* --- ÉCRAN DE CHARGEMENT --- */
+        #screen-transition { text-align: center; }
+        .prepare-anim-text {
+            font-size: 1.3rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: shrink-grow 1.5s ease-in-out infinite alternate;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        @keyframes shrink-grow {
+            0% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+        .hourglass-loader {
+            font-size: 3.5rem;
+            animation: flip-hourglass 2s infinite linear;
+            margin: 10px 0;
+        }
+        @keyframes flip-hourglass {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- ARÈNE DE JEU --- */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        /* Bouton Engrenage épuré sans animation de rotation */
+        .settings-gear-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--gold);
+            font-size: 1.1rem;
+            padding: 4px 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .settings-gear-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .game-hud { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 15px; }
+        .game-timer { font-size: 1.3rem; color: var(--gold); font-weight: bold; text-align: center; margin: 2px 0; }
+        .status-box { text-align: center; font-size: 0.8rem; color: var(--gold); min-height: 20px; font-weight: bold; }
+        .question-box { background: #161616; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.85rem; text-align: center; margin: 8px 0; min-height: 55px; display: flex; align-items: center; justify-content: center; }
+        
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .choice-btn {
+            background: #1a1a1a;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, transform 0.1s;
+        }
+        .choice-btn:hover {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+        .choice-btn.correct {
+            background: #28a745 !important;
+            border-color: #28a745 !important;
+            color: white !important;
+        }
+        .choice-btn.incorrect {
+            background: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+        }
+
+        /* Classement dynamique optimisé */
+        .scoreboard-box {
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* Animation Plein Écran Géant du Classement entre les manches */
+        .scoreboard-box.fullscreen-podium {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: #111111;
+            border: 2px solid var(--gold);
+            z-index: 50;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+            animation: pop-in 0.3s ease-out;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #222;
+            border-radius: 6px;
+            transition: transform 0.4s ease, background 0.3s ease;
+        }
+        .scoreboard-box.fullscreen-podium .score-row {
+            padding: 14px 18px;
+            font-size: 1.1rem;
+            background: #1c1c1c;
+            border: 1px solid var(--border);
+        }
+        /* Style pour les joueurs pénalisés (faux départ) */
+        .score-row.suspended {
+            opacity: 0.4;
+            background: #2a1111;
+            border-color: #552222;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <!-- ÉCRAN 1 : MENU PRINCIPAL -->
+    <div id="screen-setup" class="screen active">
+        <div class="menu-title-container">
+            <h1 class="game-title">Défi de l'enchère</h1>
+            <div class="version">Bêta 1.3</div>
+        </div>
+        <div class="menu-options">
+            <button onclick="openMatchTypes()">Jouer</button>
+            <button disabled>Paramètres</button>
+        </div>
+    </div>
+
+    <!-- ÉCRAN 2 : TYPE DE MATCH -->
+    <div id="screen-match-types" class="screen">
+        <div class="menu-title-container">
+            <h1 class="game-title">Type de Match</h1>
+            <div class="version">Choisissez votre mode de partie</div>
+        </div>
+        <div class="menu-options">
+            <button disabled>Solo (contre IA)</button>
+            <button onclick="openThemeSelector()">Multijoueur (Même écran)</button>
+            <button disabled>En ligne (2 appareils)</button>
+            <button class="btn-back-discret" onclick="closeMatchTypes()">Retour</button>
+        </div>
+    </div>
+
+    <!-- ÉCRAN 3 : THÈMES -->
+    <div id="screen-themes" class="screen">
+        <div class="menu-title-container" id="themes-header">
+            <h1 class="game-title">Choisir un Thème</h1>
+            <div class="version">Glissez ou utilisez les flèches</div>
+        </div>
+
+        <div class="carousel-wrapper">
+            <button class="carousel-arrow arrow-left" onclick="scrollCarousel('themes', -1)">❮</button>
+            <div class="carousel-container" id="carousel-themes" onscroll="updateDots('themes')">
+                <div class="theme-card" onclick="expandCard(event, this, 'themes')"><div class="card-icon">⚽</div><div class="card-name">Foot & Sport</div><div class="card-actions"><button onclick="openGameModes(event)">Jouer</button></div></div>
+                <div class="theme-card" onclick="expandCard(event, this, 'themes')"><div class="card-icon">🎮</div><div class="card-name">Jeux Vidéo</div><div class="card-actions"><button onclick="openGameModes(event)">Jouer</button></div></div>
+                <div class="theme-card" onclick="expandCard(event, this, 'themes')"><div class="card-icon">🍥</div><div class="card-name">Animés & Mangas</div><div class="card-actions"><button onclick="openGameModes(event)">Jouer</button></div></div>
+                <div class="theme-card" onclick="expandCard(event, this, 'themes')"><div class="card-icon">🎬</div><div class="card-name">Cinéma & Séries</div><div class="card-actions"><button onclick="openGameModes(event)">Jouer</button></div></div>
+                <div class="theme-card" onclick="expandCard(event, this, 'themes')"><div class="card-icon">🎵</div><div class="card-name">Musique</div><div class="card-actions"><button onclick="openGameModes(event)">Jouer</button></div></div>
+            </div>
+            <button class="carousel-arrow arrow-right" onclick="scrollCarousel('themes', 1)">❯</button>
+        </div>
+
+        <div class="carousel-dots" id="dots-themes">
+            <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+
+        <div class="menu-options">
+            <button class="btn-unexpand" onclick="collapseCard('themes')">Retour au choix</button>
+            <button class="btn-back-discret" onclick="closeThemeSelector()">Retour</button>
+        </div>
+    </div>
+
+    <!-- ÉCRAN 4 : MODES DE JEU -->
+    <div id="screen-game-modes" class="screen">
+        <div class="menu-title-container" id="modes-header">
+            <h1 class="game-title">Mode de Jeu</h1>
+            <div class="version">Choisissez votre défi</div>
+        </div>
+
+        <div class="carousel-wrapper">
+            <button class="carousel-arrow arrow-left" onclick="scrollCarousel('modes', -1)">❮</button>
+            <div class="carousel-container" id="carousel-modes" onscroll="updateDots('modes')">
+                <div class="mode-card disabled-mode"><div class="card-icon">👥</div><div class="card-name">Mode 5v5</div><div class="card-actions"><button disabled>Indisponible</button></div></div>
+                <div class="mode-card disabled-mode"><div class="card-icon">🏟️</div><div class="card-name">Mode 11v11</div><div class="card-actions"><button disabled>Indisponible</button></div></div>
+                <div class="mode-card disabled-mode"><div class="card-icon">🤥</div><div class="card-name">Le Mytho</div><div class="card-actions"><button disabled>Indisponible</button></div></div>
+                <div class="mode-card disabled-mode"><div class="card-icon">🕵️‍♂️</div><div class="card-name">Undercover</div><div class="card-actions"><button disabled>Indisponible</button></div></div>
+                <div class="mode-card" onclick="expandCard(event, this, 'modes')">
+                    <div class="card-icon">❓</div>
+                    <div class="card-name">Quiz & Classement</div>
+                    <div class="card-actions"><button onclick="openPlayerConfig(event)">Jouer</button><button disabled>Configuration</button></div>
+                </div>
+            </div>
+            <button class="carousel-arrow arrow-right" onclick="scrollCarousel('modes', 1)">❯</button>
+        </div>
+
+        <div class="carousel-dots" id="dots-modes">
+            <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+
+        <div class="menu-options">
+            <button class="btn-unexpand" onclick="collapseCard('modes')">Retour au choix</button>
+            <button class="btn-back-discret" onclick="closeGameModes()">Retour</button>
+        </div>
+    </div>
+
+    <!-- ÉCRAN 4.5 : CONFIGURATION DES JOUEURS -->
+    <div id="screen-player-config" class="screen">
+        <div class="menu-title-container">
+            <h1 class="game-title">Paramètres de partie</h1>
+            <div class="version">Définissez les participants</div>
+        </div>
+        <div class="config-group">
+            <div class="config-label">Nombre de joueurs : <span id="player-count-display">2</span></div>
+            <input type="range" id="player-range" min="2" max="4" value="2" oninput="updatePlayerInputs(this.value)">
+            <div class="pseudo-inputs" id="pseudo-container"></div>
+        </div>
+        <div class="menu-options">
+            <button id="btn-validate-config" onclick="showRulesModal()" disabled>Valider & Voir les règles</button>
+            <button class="btn-back-discret" onclick="backToGameModes()">Retour</button>
+        </div>
+    </div>
+
+    <!-- ÉCRAN 5 : ÉCRAN DE CHARGEMENT -->
+    <div id="screen-transition" class="screen">
+        <div class="prepare-anim-text">Chargement de l'arène...<br>Préparez vos touches !</div>
+        <div class="hourglass-loader">⏳</div>
+        <div class="version">Le jeu se prépare tranquillement</div>
+    </div>
+
+    <!-- ÉCRAN 6 : ARÈNE DE JEU -->
+    <div id="screen-game-arena" class="screen">
+        <div class="game-header">
+            <!-- Bouton Engrenage simple sans rotation -->
+            <button class="settings-gear-btn" onclick="quitGame()" title="Quitter / Pause">⚙️</button>
+            <div class="game-hud">
+                <span>Manche <span id="round-num">1</span> / 20</span>
+                <span id="question-points-badge" style="color: var(--gold);">1 pt</span>
+            </div>
+        </div>
+        
+        <div class="game-timer" id="timer-display">30s</div>
+        <div class="status-box" id="game-status-msg">En attente du bip...</div>
+        <div class="question-box" id="question-text">Chargement...</div>
+        <div class="choices-grid" id="choices-container"></div>
+        
+        <!-- Classement dynamique -->
+        <div class="scoreboard-box" id="live-scoreboard"></div>
+    </div>
+</div>
+
+<!-- POP-UP RÈGLEMENT DÉTAILLÉ AVEC SCROLLBAR -->
+<div class="modal-overlay" id="rules-modal">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title">Règlement & Consignes Officielles</div>
+        <div class="modal-body">
+            <div class="rule-box keys">
+                <strong>1. Attributions des Touches :</strong><br>
+                Chaque joueur dispose d'une touche attitrée sur le clavier (touches A, E, I, U selon l'ordre des pseudos). N'utilisez ni la touche Entrée ni la barre d'Espace pour buzzer.
+            </div>
+            <div class="rule-box anti-buzz">
+                <strong>2. Piège du « Top » & Sanctions :</strong><br>
+                Après l'énoncé de la question, un délai aléatoire retentira avant le bip. Si vous buzsez avant, c'est un faux départ : vous êtes grisé et disqualifié pour la question, laissant les autres jouer.
+            </div>
+            <div class="rule-box streak">
+                <strong>3. QCM & Validation Visuelle :</strong><br>
+                Une fois la main obtenue, cliquez sur l'une des 4 propositions de réponses. La bonne réponse passe au vert, et les erreurs s'affichent en rouge.
+            </div>
+            <div class="rule-box bonus">
+                <strong>4. Classement en Plein Écran :</strong><br>
+                À chaque fin de question, le classement s'affiche en grand format animé pendant 3 secondes avant de se réduire pour continuer.
+            </div>
+        </div>
+        <div class="modal-footer" onclick="hideRulesModalAndStartTransition()">Appuyez sur [ ENTRÉE ] ou cliquez ici pour lancer</div>
+    </div>
+</div>
+
+<script>
+    let currentIndices = { themes: 0, modes: 0 };
+    const totalItems = 5;
+    let isModalOpen = false;
+    let players = [];
+    let scores = {};
+    let suspendedRounds = {};
+    let currentRound = 1;
+    let timerInterval = null;
+    let timeLeft = 30;
+    let gameStarted = false;
+
+    let canBuzz = false;
+    let activePlayer = null;
+    let bipTimeout = null;
+
+    const availableKeys = ['a', 'e', 'i', 'u']; 
+
+    const questionsList = [
+        { q: "Quel joueur détient le transfert le plus cher pour un défenseur central (Man City, 2023) ?", choices: ["Josko Gvardiol", "Harry Maguire", "Virgil van Dijk", "Ruben Dias"], correct: 0, pts: 1 },
+        { q: "Quel club a vendu Enzo Fernández à Chelsea pour 121 millions ?", choices: ["Benfica", "River Plate", "Porto", "Sporting CP"], correct: 0, pts: 2 },
+        { q: "En quelle année Zinédine Zidane a-t-il rejoint le Real Madrid ?", choices: ["2001", "2000", "2002", "1999"], correct: 0, pts: 1 },
+        { q: "Quel attaquant a été transféré de l'Inter à Chelsea en 2021 pour 115M€ ?", choices: ["Romelu Lukaku", "Lautaro Martínez", "Edin Džeko", "Alexis Sánchez"], correct: 0, pts: 1 },
+        { q: "Quel club français a cédé Aurélien Tchouaméni au Real en 2022 ?", choices: ["AS Monaco", "Bordeaux", "OGC Nice", "Olympique Lyonnais"], correct: 0, pts: 1 },
+        { q: "Dans quel pays se trouve le club de Tromsø, l'un des plus au nord du monde ?", choices: ["Norvège", "Suède", "Islande", "Finlande"], correct: 0, pts: 1 },
+        { q: "Quel pays a perdu 3 finales de Coupe du Monde (1974, 1978, 2010) ?", choices: ["Pays-Bas", "Argentine", "Brésil", "Allemagne"], correct: 0, pts: 1 },
+        { q: "Quel est le seul club de Premier League à avoir fait une saison entière sans défaite ?", choices: ["Arsenal", "Chelsea", "Manchester United", "Liverpool"], correct: 0, pts: 2 },
+        { q: "Quel joueur détient le record de buts sur une seule année civile (85 buts en 2012) ?", choices: ["Lionel Messi", "Cristiano Ronaldo", "Gerd Müller", "Robert Lewandowski"], correct: 0, pts: 1 },
+        { q: "Quel club a recruté Neymar pour 222 millions d'euros en 2017 ?", choices: ["Paris Saint-Germain", "Manchester City", "Real Madrid", "FC Barcelone"], correct: 0, pts: 1 },
+        { q: "Combien de fois le Paris Saint-Germain a-t-il gagné la Ligue des Champions ?", choices: ["0 fois", "1 fois", "2 fois", "3 fois"], correct: 0, pts: 2 },
+        { q: "Quel joueur a été acheté 180 millions d'euros par le PSG en 2018 ?", choices: ["Kylian Mbappé", "Ousmane Dembélé", "Randal Kolo Muani", "Achraf Hakimi"], correct: 0, pts: 1 },
+        { q: "Quel club a déboursé 145 millions pour Alexander Isak ?", choices: ["Newcastle United", "Real Sociedad", "Borussia Dortmund", "Arsenal"], correct: 0, pts: 1 },
+        { q: "En quelle année le cap des 100M€ a-t-il été franchi pour Gareth Bale ?", choices: ["2013", "2014", "2012", "2015"], correct: 0, pts: 1 },
+        { q: "Quel milieu français est redevenu le joueur le plus cher en 2016 à Man United ?", choices: ["Paul Pogba", "N'Golo Kanté", "Eduardo Camavinga", "Aurélien Tchouaméni"], correct: 0, pts: 1 },
+        { q: "Quel club espagnol a acheté Ousmane Dembélé en 2017 pour 148 millions ?", choices: ["FC Barcelone", "Real Madrid", "Atlético de Madrid", "Valence CF"], correct: 0, pts: 1 },
+        { q: "Quel est le montant estimé du transfert de Jadon Sancho à Manchester United en 2021 ?", choices: ["85 millions", "65 millions", "100 millions", "50 millions"], correct: 0, pts: 2 },
+        { q: "Vrai ou Faux : Le Real Madrid compte 15 Ligues des Champions à son palmarès.", choices: ["Vrai", "Faux", "Je ne sais pas", "Aucun des deux"], correct: 0, pts: 1 },
+        { q: "Contre-attaque en duo : Citez un vainqueur de la Ligue des Champions avec le PSG.", choices: ["Personne à ce jour", "Lionel Messi", "Zlatan Ibrahimović", "Neymar Jr"], correct: 0, pts: 2 },
+        { q: "Dernière question : Quel joueur a remporté le Ballon d'Or en 2024 ?", choices: ["Rodri", "Vinícius Júnior", "Jude Bellingham", "Kylian Mbappé"], correct: 0, pts: 2 }
+    ];
+
+    function quitGame() {
+        if (confirm("Voulez-vous vraiment quitter la partie en cours ?")) {
+            location.reload();
+        }
+    }
+
+    function speakText(text, callback) {
+        if (!gameStarted && !isModalOpen) return;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            utterance.rate = 1.1;
+            if (callback) utterance.onend = callback;
+            window.speechSynthesis.speak(utterance);
+        } else if (callback) {
+            callback();
+        }
+    }
+
+    function openMatchTypes() {
+        document.getElementById('screen-setup').classList.remove('active');
+        document.getElementById('screen-match-types').classList.add('active');
+    }
+
+    function closeMatchTypes() {
+        document.getElementById('screen-match-types').classList.remove('active');
+        document.getElementById('screen-setup').classList.add('active');
+    }
+
+    function openThemeSelector() {
+        collapseCard('themes');
+        document.getElementById('screen-match-types').classList.remove('active');
+        document.getElementById('screen-themes').classList.add('active');
+        currentIndices.themes = 0;
+        scrollToCard('themes', 0);
+    }
+
+    function closeThemeSelector() {
+        collapseCard('themes');
+        document.getElementById('screen-themes').classList.remove('active');
+        document.getElementById('screen-match-types').classList.add('active');
+    }
+
+    function openGameModes(event) {
+        if (event) event.stopPropagation();
+        collapseCard('themes');
+        document.getElementById('screen-themes').classList.remove('active');
+        document.getElementById('screen-game-modes').classList.add('active');
+        currentIndices.modes = 0;
+        scrollToCard('modes', 0);
+    }
+
+    function closeGameModes() {
+        collapseCard('modes');
+        document.getElementById('screen-game-modes').classList.remove('active');
+        document.getElementById('screen-themes').classList.add('active');
+    }
+
+    function scrollCarousel(type, direction) {
+        currentIndices[type] += direction;
+        if (currentIndices[type] < 0) currentIndices[type] = totalItems - 1;
+        else if (currentIndices[type] >= totalItems) currentIndices[type] = 0;
+        scrollToCard(type, currentIndices[type]);
+    }
+
+    function scrollToCard(type, index) {
+        const carousel = document.getElementById(`carousel-${type}`);
+        const cards = carousel.querySelectorAll(type === 'themes' ? '.theme-card' : '.mode-card');
+        if (cards[index]) cards[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
+    function expandCard(event, cardElement, type) {
+        event.stopPropagation();
+        const container = document.getElementById('main-container');
+        const selector = type === 'themes' ? '.theme-card' : '.mode-card';
+        document.querySelectorAll(selector).forEach(card => card.classList.remove('expanded'));
+        cardElement.classList.add('expanded');
+        container.classList.add('card-expanded');
+    }
+
+    function collapseCard(type) {
+        const container = document.getElementById('main-container');
+        const selector = type === 'themes' ? '.theme-card' : '.mode-card';
+        document.querySelectorAll(selector).forEach(card => card.classList.remove('expanded'));
+        container.classList.remove('card-expanded');
+    }
+
+    function updateDots(type) {
+        const carousel = document.getElementById(`carousel-${type}`);
+        const cardWidth = carousel.querySelector(type === 'themes' ? '.theme-card' : '.mode-card').offsetWidth + 15;
+        const index = Math.round(carousel.scrollLeft / cardWidth);
+        if (!isNaN(index) && index >= 0 && index < totalItems) {
+            currentIndices[type] = index;
+            document.querySelectorAll(`#dots-${type} .dot`).forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+    }
+
+    function openPlayerConfig(event) {
+        if (event) event.stopPropagation();
+        collapseCard('modes');
+        document.getElementById('screen-game-modes').classList.remove('active');
+        document.getElementById('screen-player-config').classList.add('active');
+        document.getElementById('main-container').classList.remove('card-expanded');
+        updatePlayerInputs(2);
+        document.getElementById('player-range').value = 2;
+    }
+
+    function backToGameModes() {
+        document.getElementById('screen-player-config').classList.remove('active');
+        document.getElementById('screen-game-modes').classList.add('active');
+    }
+
+    function updatePlayerInputs(count) {
+        document.getElementById('player-count-display').innerText = count;
+        const container = document.getElementById('pseudo-container');
+        container.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = `Entrez le pseudo du Joueur ${i} (Touche : ${availableKeys[i-1].toUpperCase()})`;
+            input.id = `player-pseudo-${i}`;
+            input.addEventListener('input', checkAllPseudosFilled);
+            input.addEventListener('keyup', checkAllPseudosFilled);
+            container.appendChild(input);
+        }
+        checkAllPseudosFilled();
+    }
+
+    function checkAllPseudosFilled() {
+        const count = document.getElementById('player-range').value;
+        let allFilled = true;
+        for (let i = 1; i <= count; i++) {
+            const input = document.getElementById(`player-pseudo-${i}`);
+            if (!input || input.value.trim() === '') { 
+                allFilled = false; 
+                break; 
+            }
+        }
+        document.getElementById('btn-validate-config').disabled = !allFilled;
+    }
+
+    function showRulesModal() {
+        players = [];
+        scores = {};
+        suspendedRounds = {};
+        const count = document.getElementById('player-range').value;
+        
+        for (let i = 1; i <= count; i++) {
+            const val = document.getElementById(`player-pseudo-${i}`).value.trim();
+            players.push(val);
+            scores[val] = 0;
+            suspendedRounds[val] = false;
+        }
+
+        isModalOpen = true;
+        document.getElementById('rules-modal').classList.add('active');
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance("Bienvenue dans le Défi de l'enchère. Lisez attentivement le règlement officiel sur l'écran. Attendez le bip avant de buzzer. Bon jeu à tous.");
+            utterance.lang = 'fr-FR';
+            utterance.rate = 1.1;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function hideRulesModalAndStartTransition() {
+        if (!isModalOpen) return;
+        isModalOpen = false;
+        
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+
+        document.getElementById('rules-modal').classList.remove('active');
+        document.getElementById('screen-player-config').classList.remove('active');
+        document.getElementById('screen-transition').classList.add('active');
+
+        setTimeout(() => {
+            document.getElementById('screen-transition').classList.remove('active');
+            document.getElementById('screen-game-arena').classList.add('active');
+            gameStarted = true;
+            currentRound = 1;
+            loadQuestion();
+        }, 3000);
+    }
+
+    function loadQuestion() {
+        if (currentRound > 20) {
+            speakText("Fin de la partie ! Merci d'avoir joué.");
+            alert("Fin de la partie ! Merci d'avoir joué.");
+            location.reload();
+            return;
+        }
+
+        // Réinitialise les suspensions pour la nouvelle question
+        players.forEach(p => suspendedRounds[p] = false);
+
+        const qData = questionsList[currentRound - 1];
+        document.getElementById('round-num').innerText = currentRound;
+        document.getElementById('question-points-badge').innerText = qData.pts + (qData.pts > 1 ? ' pts' : ' pt');
+        document.getElementById('question-text').innerText = qData.q;
+        document.getElementById('game-status-msg').innerText = "Écoutez la question...";
+        activePlayer = null;
+
+        const choicesContainer = document.getElementById('choices-container');
+        choicesContainer.innerHTML = '';
+        qData.choices.forEach((choice, idx) => {
+            choicesContainer.innerHTML += `<button class="choice-btn" id="choice-btn-${idx}" onclick="selectChoice(${idx})">${choice}</button>`;
+        });
+
+        updateScoreboard();
+
+        speakText(qData.q, () => {
+            const randomDelay = Math.floor(Math.random() * 2500) + 500;
+            document.getElementById('game-status-msg').innerText = "Suspense...";
+            
+            canBuzz = false;
+            bipTimeout = setTimeout(() => {
+                canBuzz = true;
+                document.getElementById('game-status-msg').innerText = "⚡ BIP ! BUZZÉEZ & RÉPONDEZ !";
+                playBipSound();
+                startTimer();
+            }, randomDelay);
+        });
+    }
+
+    function playBipSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.value = 950; 
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.25);
+        } catch(e) {}
+    }
+
+    function startTimer() {
+        timeLeft = 30;
+        document.getElementById('timer-display').innerText = timeLeft + 's';
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').innerText = timeLeft + 's';
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                currentRound++;
+                loadQuestion();
+            }
+        }, 1000);
+    }
+
+    function selectChoice(index) {
+        if (!activePlayer) {
+            alert("Veuillez d'abord buzzer avec votre touche !");
+            return;
+        }
+
+        clearInterval(timerInterval);
+        clearTimeout(bipTimeout);
+        canBuzz = false;
+
+        const qData = questionsList[currentRound - 1];
+        const selectedBtn = document.getElementById(`choice-btn-${index}`);
+        const correctBtn = document.getElementById(`choice-btn-${qData.correct}`);
+
+        if (index === qData.correct) {
+            selectedBtn.classList.add('correct');
+            scores[activePlayer] += qData.pts;
+            speakText(`${activePlayer}, bonne réponse !`);
+        } else {
+            selectedBtn.classList.add('incorrect');
+            correctBtn.classList.add('correct');
+            speakText(`Mauvaise réponse !`);
+        }
+
+        // TRANSITION PLEIN ÉCRAN DU CLASSEMENT PENDANT 3 SECONDES
+        const scoreboardBox = document.getElementById('live-scoreboard');
+        scoreboardBox.classList.add('fullscreen-podium');
+        updateScoreboard();
+
+        let countdown = 3;
+        document.getElementById('game-status-msg').innerText = `🏆 Classement général (prochaine manche dans ${countdown}s)...`;
+        
+        const pauseInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                document.getElementById('game-status-msg').innerText = `🏆 Classement général (prochaine manche dans ${countdown}s)...`;
+            } else {
+                clearInterval(pauseInterval);
+                scoreboardBox.classList.remove('fullscreen-podium');
+                currentRound++;
+                loadQuestion();
+            }
+        }, 1000);
+    }
+
+    function updateScoreboard() {
+        const scoreboard = document.getElementById('live-scoreboard');
+        const sortedPlayers = [...players].sort((a, b) => scores[b] - scores[a]);
+
+        scoreboard.innerHTML = '';
+        sortedPlayers.forEach((name, index) => {
+            const isSuspended = suspendedRounds[name];
+            scoreboard.innerHTML += `
+                <div class="score-row ${isSuspended ? 'suspended' : ''}">
+                    <span>${index + 1}. ${name} ${isSuspended ? '(Faux départ)' : ''}</span>
+                    <span style="color: var(--gold); font-weight: bold;">${scores[name]} pts</span>
+                </div>
+            `;
+        });
+    }
+
+    window.addEventListener('keyup', (e) => {
+        if (isModalOpen && e.key === 'Enter') {
+            e.preventDefault();
+            hideRulesModalAndStartTransition();
+            return;
+        }
+
+        if (!gameStarted) return;
+
+        const pressedKey = e.key.toLowerCase();
+        const playerIndex = availableKeys.indexOf(pressedKey);
+
+        if (playerIndex !== -1 && playerIndex < players.length) {
+            const playerName = players[playerIndex];
+
+            // Si le joueur est déjà suspendu (faux départ), on ignore sa touche
+            if (suspendedRounds[playerName]) return;
+
+            if (!canBuzz) {
+                // Faux départ : on grise ce joueur et on laisse les autres continuer
+                suspendedRounds[playerName] = true;
+                document.getElementById('game-status-msg').innerText = `❌ Faux départ pour ${playerName} ! Exclu pour cette question.`;
+                speakText(`Faux départ pour ${playerName}.`);
+                updateScoreboard();
+            } else if (!activePlayer) {
+                activePlayer = playerName;
+                clearTimeout(bipTimeout);
+                document.getElementById('game-status-msg').innerText = `${playerName} a la main ! Choisissez une réponse.`;
+                speakText(`${playerName} a la main.`);
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
